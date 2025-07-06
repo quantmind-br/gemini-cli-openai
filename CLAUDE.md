@@ -22,13 +22,10 @@ This is a **Gemini CLI OpenAI Server** that transforms Google's Gemini models in
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check code formatting
 
-### Testing
-- `python test_api.py` - Comprehensive API tests using requests
-- `python test_openai_sdk.py` - OpenAI SDK compatibility tests
-- `run_tests.bat` - Run all Python tests (Windows)
-- Use `api-test.http` and `stream-test.http` for manual API testing
-- Debug endpoints: `/v1/debug/cache`, `/v1/token-test`, `/v1/test`
+### Testing & Debugging
+- Debug endpoints: `/v1/debug/cache`, `/v1/token-test`, `/v1/test`, `/v1/debug/env-config`
 - Dashboard: Access `http://127.0.0.1:3000/dashboard` for configuration interface
+- **Note**: Test files and example scripts have been removed to streamline the codebase
 
 ## Architecture Overview
 
@@ -69,19 +66,30 @@ This is a **Gemini CLI OpenAI Server** that transforms Google's Gemini models in
 - Use proper TypeScript types from `src/types.ts` - avoid `any`
 - Add constants to `src/constants.ts` instead of using magic numbers/strings
 - Follow existing patterns for error handling and logging
+- **Package Management**: Use npm exclusively (yarn.lock has been removed)
 
 ### Environment Configuration
-Key environment variables (see `Env` interface in `types.ts` and `.env.example`):
-- `GCP_SERVICE_ACCOUNT` - OAuth2 credentials JSON (required)
+**Configuration Methods:**
+1. **Web Dashboard** (Recommended) - Configure via `http://127.0.0.1:3000/dashboard`
+2. **Environment Variables** - Traditional `.env` file or system variables
+
+Key environment variables (see `Env` interface in `types.ts`):
+- `DASHBOARD_USERNAME` - Username for web dashboard access (required for dashboard)
+- `DASHBOARD_PASSWORD` - Password for web dashboard access (required for dashboard)
+- `GCP_SERVICE_ACCOUNT` - OAuth2 credentials JSON (configure via dashboard upload)
 - `REDIS_URL` - Redis connection URL (default: redis://redis:6379)
 - `PORT` - Server port (default: 3000)
 - `GEMINI_PROJECT_ID` - Google Cloud project ID (optional)
-- `OPENAI_API_KEY` - API authentication key (optional)
+- `OPENAI_API_KEY` - API authentication key (can generate via dashboard)
 - `ENABLE_REAL_THINKING` - Enable native Gemini reasoning (optional)
 - `ENABLE_FAKE_THINKING` - Enable synthetic thinking for testing (optional)
 - `STREAM_THINKING_AS_CONTENT` - DeepSeek R1 style thinking output (optional)
-- `DASHBOARD_USERNAME` - Username for web dashboard access (required for dashboard)
-- `DASHBOARD_PASSWORD` - Password for web dashboard access (required for dashboard)
+
+**Dashboard Configuration Features:**
+- Upload OAuth2 credentials JSON directly
+- Generate OpenAI API keys with one click
+- Real-time configuration validation
+- Environment override with `data/.env` persistence
 
 ### Key Features
 - **OAuth2 Authentication** - Uses Google account credentials, no API keys needed
@@ -110,13 +118,11 @@ Key environment variables (see `Env` interface in `types.ts` and `.env.example`)
 3. **Docker Single Container** - Build and deploy individual containers
 
 ### Testing Strategy
-- **Python Test Scripts** - Comprehensive automated testing
-  - `test_api.py` - Raw HTTP requests testing
-  - `test_openai_sdk.py` - OpenAI SDK compatibility testing
-- **HTTP Files** - Manual API validation with `api-test.http` and `stream-test.http`
-- **Debug Endpoints** - Authentication and functionality testing
+- **Debug Endpoints** - Authentication and functionality testing (`/v1/debug/cache`, `/v1/token-test`, `/v1/test`, `/v1/debug/env-config`)
 - **Docker Health Checks** - Container and service monitoring
-- **Vision Testing** - Multi-modal conversations with various image formats
+- **Vision Testing** - Multi-modal conversations with various image formats via dashboard
+- **Dashboard Testing** - Web interface validation and configuration testing
+- **Note**: External test files have been removed to maintain a clean codebase
 
 ## Important Notes
 
@@ -130,13 +136,16 @@ Key environment variables (see `Env` interface in `types.ts` and `.env.example`)
 
 ## Quick Start
 
-1. **Setup Environment**: `cp .env.example .env` and add your OAuth2 credentials
-2. **Configure Dashboard**: Add `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` to `.env`
-3. **Start Services**: `start.bat` or `docker-compose up -d`
-4. **Configure via Dashboard**: Visit `http://127.0.0.1:3000/dashboard` to manage settings
-5. **Test API**: `python test_api.py` or visit `http://127.0.0.1:3000`
-6. **Restart Services**: `restart.bat` or `./restart.sh` (if needed)
-7. **Stop Services**: `stop.bat` or `docker-compose down`
+1. **Setup Dashboard Authentication**: Add `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD` to environment
+2. **Start Services**: `start.bat` or `docker-compose up -d`
+3. **Access Dashboard**: Visit `http://127.0.0.1:3000/dashboard` to configure
+4. **Upload OAuth2 Credentials**: Use dashboard file upload for `oauth_creds.json`
+5. **Generate API Key**: Use dashboard to create OpenAI-compatible API key (optional)
+6. **Test API**: Visit `http://127.0.0.1:3000` or use debug endpoints
+7. **Restart Services**: `restart.bat` or `./restart.sh` (if needed)
+8. **Stop Services**: `stop.bat` or `docker-compose down`
+
+**Note**: The dashboard method is now the recommended configuration approach, eliminating the need for manual `.env` file editing.
 
 ## Web Dashboard Features
 

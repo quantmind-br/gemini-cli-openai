@@ -12,8 +12,7 @@ Transform Google's Gemini models into OpenAI-compatible endpoints. Access Google
 - 🖼️ **Vision Support** - Multi-modal conversations with images (base64 & URLs)
 - 🌐 **Third-party Integration** - Compatible with Open WebUI, ChatGPT clients, and more
 - 🐳 **Docker Support** - Easy deployment with Docker and Docker Compose
-- 🖼️ **Vision Support** - Multi-modal conversations with images (base64 & URLs)
-- 🌐 **Third-party Integration** - Compatible with Open WebUI, ChatGPT clients, and more
+- 🎛️ **Web Dashboard** - Intuitive interface for configuration and credential management
 - ⚡ **High Performance** - Built with Hono and Node.js for speed
 - 🔄 **Smart Token Caching** - Intelligent token management with Redis
 - 🆓 **Free Tier Access** - Leverage Google's free tier through Code Assist API
@@ -98,12 +97,10 @@ You need OAuth2 credentials from a Google account that has accessed Gemini. The 
 ### Step 2: Environment Setup
 
 1. Clone this repository.
-2. Create a `.env` file by copying the example:
-   ```bash
-   cp .env.example .env
-   ```
-3. Open the `.env` file and paste your single-line OAuth2 credentials JSON into the `GCP_SERVICE_ACCOUNT` variable.
-4. Configure other variables like `OPENAI_API_KEY` if needed.
+2. **Set up dashboard authentication** by defining:
+   - `DASHBOARD_USERNAME` - Your chosen dashboard username
+   - `DASHBOARD_PASSWORD` - Your chosen dashboard password
+3. **All other configuration will be done via the web dashboard** (no manual `.env` editing required).
 
 ### Step 3: Run with Docker Compose
 
@@ -113,6 +110,16 @@ docker-compose up -d
 ```
 
 Your Gemini OpenAI compatible API is now running at `http://localhost:3000`.
+
+### Step 4: Configure via Web Dashboard
+
+1. **Access the dashboard**: Navigate to `http://127.0.0.1:3000/dashboard`
+2. **Login** with your `DASHBOARD_USERNAME` and `DASHBOARD_PASSWORD`
+3. **Upload OAuth2 credentials**: Use the file upload feature to upload your `oauth_creds.json`
+4. **Generate API key** (optional): Create an OpenAI-compatible API key for authentication
+5. **Configure features**: Enable/disable thinking modes and other optional features
+
+The dashboard provides a user-friendly interface for all configuration needs, eliminating manual file editing.
 
 ### Building and Pushing to Docker Hub
 
@@ -130,18 +137,32 @@ Scripts are provided to build and push the Docker image to Docker Hub.
 
 ## 🔧 Configuration
 
+### Web Dashboard (Recommended)
+
+The easiest way to configure the application is through the **web dashboard**:
+
+1. **Access**: `http://127.0.0.1:3000/dashboard`
+2. **Features**:
+   - 📁 **File Upload**: Upload OAuth2 credentials directly
+   - 🔑 **API Key Generation**: Generate OpenAI-compatible API keys
+   - ⚙️ **Feature Toggles**: Enable/disable thinking modes and options
+   - ✅ **Real-time Validation**: Instant feedback on configuration
+   - 💾 **Persistent Storage**: Configurations saved to `data/.env`
+
 ### Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `GCP_SERVICE_ACCOUNT` | ✅ | OAuth2 credentials JSON string (single line) |
-| `GEMINI_PROJECT_ID` | ❌ | Google Cloud Project ID (auto-discovered if not set) |
-| `OPENAI_API_KEY` | ❌ | API key for authentication (if not set, API is public) |
-| `ENABLE_FAKE_THINKING` | ❌ | Enable synthetic thinking output for thinking models (set to "true" to enable) |
-| `ENABLE_REAL_THINKING` | ❌ | Enable real Gemini thinking output (set to "true" to enable) |
-| `STREAM_THINKING_AS_CONTENT` | ❌ | Stream thinking as content with `<thinking>` tags (DeepSeek R1 style) |
-| `PORT` | ❌ | Port for the server to listen on (default: `3000`) |
-| `REDIS_URL` | ❌ | Connection URL for Redis cache (default: `redis://redis:6379`) |
+| Variable | Required | Description | Dashboard Config |
+|----------|----------|-------------|------------------|
+| `DASHBOARD_USERNAME` | ✅ | Dashboard login username | ❌ |
+| `DASHBOARD_PASSWORD` | ✅ | Dashboard login password | ❌ |
+| `GCP_SERVICE_ACCOUNT` | ✅ | OAuth2 credentials JSON | ✅ Via upload |
+| `GEMINI_PROJECT_ID` | ❌ | Google Cloud Project ID | ✅ |
+| `OPENAI_API_KEY` | ❌ | API key for authentication | ✅ Generate |
+| `ENABLE_FAKE_THINKING` | ❌ | Enable synthetic thinking output | ✅ |
+| `ENABLE_REAL_THINKING` | ❌ | Enable real Gemini thinking | ✅ |
+| `STREAM_THINKING_AS_CONTENT` | ❌ | Stream thinking as content tags | ✅ |
+| `PORT` | ❌ | Server port (default: `3000`) | ❌ |
+| `REDIS_URL` | ❌ | Redis connection URL | ❌ |
 
 **Authentication Security:**
 - When `OPENAI_API_KEY` is set, all `/v1/*` endpoints require authentication
@@ -471,6 +492,12 @@ POST /v1/token-test
 POST /v1/test
 ```
 
+#### Environment Configuration Debug
+```http
+GET /v1/debug/env-config
+```
+*Returns detailed information about file system, environment variables, and configuration status*
+
 ### Image Support (Vision)
 
 The worker supports multimodal conversations with images for vision-capable models. Images can be provided as base64-encoded data URLs or as external URLs.
@@ -595,6 +622,9 @@ curl -X POST http://localhost:3000/v1/token-test
 
 # Test full flow
 curl -X POST http://localhost:3000/v1/test
+
+# Debug environment configuration
+curl http://localhost:3000/v1/debug/env-config
 ```
 
 
