@@ -1,4 +1,5 @@
 import { Env, OAuth2Credentials } from "./types";
+import { createClient, RedisClientType } from "redis";
 import {
 	CODE_ASSIST_ENDPOINT,
 	CODE_ASSIST_API_VERSION,
@@ -38,31 +39,46 @@ interface TokenCacheInfo {
 export class AuthManager {
 	private env: Env;
 	private accessToken: string | null = null;
+	private redisClient: RedisClientType | null = null;
 
 	constructor(env: Env) {
 		this.env = env;
 	}
 
 	/**
-	 * Initializes authentication using OAuth2 credentials with KV storage caching.
+	 * Initialize Redis client if not already initialized.
+	 */
+	private async initRedis(): Promise<RedisClientType> {
+		if (!this.redisClient) {
+			const redisUrl = this.env.REDIS_URL || process.env.REDIS_URL || "redis://redis:6379";
+			this.redisClient = createClient({ url: redisUrl });
+			await this.redisClient.connect();
+		}
+		return this.redisClient;
+	}
+
+	/**
+	 * Initializes authentication using OAuth2 credentials with Redis caching.
 	 */
 	public async initializeAuth(): Promise<void> {
-		if (!this.env.GCP_SERVICE_ACCOUNT) {
+		const credentials = this.env.GCP_SERVICE_ACCOUNT || process.env.GCP_SERVICE_ACCOUNT;
+		if (!credentials) {
 			throw new Error("`GCP_SERVICE_ACCOUNT` environment variable not set. Please provide OAuth2 credentials JSON.");
 		}
 
 		try {
-			// First, try to get a cached token from KV storage
+			// First, try to get a cached token from Redis
 			let cachedTokenData = null;
 
 			try {
-				const cachedToken = await this.env.GEMINI_CLI_KV.get(KV_TOKEN_KEY, "json");
+				const redis = await this.initRedis();
+				const cachedToken = await redis.get(KV_TOKEN_KEY);
 				if (cachedToken) {
-					cachedTokenData = cachedToken as CachedTokenData;
-					console.log("Found cached token in KV storage");
+					cachedTokenData = JSON.parse(cachedToken) as CachedTokenData;
+					console.log("Found cached token in Redis storage");
 				}
-			} catch (kvError) {
-				console.log("No cached token found in KV storage or KV error:", kvError);
+			} catch (redisError) {
+				console.log("No cached token found in Redis storage or Redis error:", redisError);
 			}
 
 			// Check if cached token is still valid (with buffer)
@@ -77,7 +93,7 @@ export class AuthManager {
 			}
 
 			// Parse original credentials from environment
-			const oauth2Creds: OAuth2Credentials = JSON.parse(this.env.GCP_SERVICE_ACCOUNT);
+			const oauth2Creds: OAuth2Credentials = JSON.parse(credentials);
 
 			// Check if the original token is still valid
 			const timeUntilExpiry = oauth2Creds.expiry_date - Date.now();
@@ -86,8 +102,8 @@ export class AuthManager {
 				this.accessToken = oauth2Creds.access_token;
 				console.log(`Original token is valid for ${Math.floor(timeUntilExpiry / 1000)} more seconds`);
 
-				// Cache the token in KV storage
-				await this.cacheTokenInKV(oauth2Creds.access_token, oauth2Creds.expiry_date);
+				// Cache the token in Redis
+				await this.cacheTokenInRedis(oauth2Creds.access_token, oauth2Creds.expiry_date);
 				return;
 			}
 
@@ -102,7 +118,7 @@ export class AuthManager {
 	}
 
 	/**
-	 * Refresh the OAuth token and cache it in KV storage.
+	 * Refresh the OAuth token and cache it in Redis.
 	 */
 	private async refreshAndCacheToken(refreshToken: string): Promise<void> {
 		console.log("Refreshing OAuth token...");
@@ -135,14 +151,14 @@ export class AuthManager {
 		console.log("Token refreshed successfully");
 		console.log(`New token expires in ${refreshData.expires_in} seconds`);
 
-		// Cache the new token in KV storage
-		await this.cacheTokenInKV(refreshData.access_token, expiryTime);
+		// Cache the new token in Redis
+		await this.cacheTokenInRedis(refreshData.access_token, expiryTime);
 	}
 
 	/**
-	 * Cache the access token in KV storage.
+	 * Cache the access token in Redis.
 	 */
-	private async cacheTokenInKV(accessToken: string, expiryDate: number): Promise<void> {
+	private async cacheTokenInRedis(accessToken: string, expiryDate: number): Promise<void> {
 		try {
 			const tokenData = {
 				access_token: accessToken,
@@ -154,39 +170,40 @@ export class AuthManager {
 			const ttlSeconds = Math.floor((expiryDate - Date.now()) / 1000) - 300; // 5 minutes buffer
 
 			if (ttlSeconds > 0) {
-				await this.env.GEMINI_CLI_KV.put(KV_TOKEN_KEY, JSON.stringify(tokenData), {
-					expirationTtl: ttlSeconds
-				});
-				console.log(`Token cached in KV storage with TTL of ${ttlSeconds} seconds`);
+				const redis = await this.initRedis();
+				await redis.setEx(KV_TOKEN_KEY, ttlSeconds, JSON.stringify(tokenData));
+				console.log(`Token cached in Redis with TTL of ${ttlSeconds} seconds`);
 			} else {
-				console.log("Token expires too soon, not caching in KV");
+				console.log("Token expires too soon, not caching in Redis");
 			}
-		} catch (kvError) {
-			console.error("Failed to cache token in KV storage:", kvError);
+		} catch (redisError) {
+			console.error("Failed to cache token in Redis:", redisError);
 			// Don't throw an error here as the token is still valid, just not cached
 		}
 	}
 
 	/**
-	 * Clear cached token from KV storage.
+	 * Clear cached token from Redis.
 	 */
 	public async clearTokenCache(): Promise<void> {
 		try {
-			await this.env.GEMINI_CLI_KV.delete(KV_TOKEN_KEY);
-			console.log("Cleared cached token from KV storage");
-		} catch (kvError) {
-			console.log("Error clearing KV cache:", kvError);
+			const redis = await this.initRedis();
+			await redis.del(KV_TOKEN_KEY);
+			console.log("Cleared cached token from Redis");
+		} catch (redisError) {
+			console.log("Error clearing Redis cache:", redisError);
 		}
 	}
 
 	/**
-	 * Get cached token info from KV storage.
+	 * Get cached token info from Redis.
 	 */
 	public async getCachedTokenInfo(): Promise<TokenCacheInfo> {
 		try {
-			const cachedToken = await this.env.GEMINI_CLI_KV.get(KV_TOKEN_KEY, "json");
+			const redis = await this.initRedis();
+			const cachedToken = await redis.get(KV_TOKEN_KEY);
 			if (cachedToken) {
-				const tokenData = cachedToken as CachedTokenData;
+				const tokenData = JSON.parse(cachedToken) as CachedTokenData;
 				const timeUntilExpiry = tokenData.expiry_date - Date.now();
 
 				return {
@@ -224,7 +241,7 @@ export class AuthManager {
 			if (response.status === 401 && !isRetry) {
 				console.log("Got 401 error, clearing token cache and retrying...");
 				this.accessToken = null; // Clear cached token
-				await this.clearTokenCache(); // Clear KV cache
+				await this.clearTokenCache(); // Clear Redis cache
 				await this.initializeAuth(); // This will refresh the token
 				return this.callEndpoint(method, body, true); // Retry once
 			}

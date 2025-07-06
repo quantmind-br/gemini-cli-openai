@@ -1,0 +1,26 @@
+# This file is designed for deployment on Coolify.
+# It sets up the Gemini CLI OpenAI service and a Redis cache.
+
+services:
+  gemini-cli-openai:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - REDIS_URL=redis://redis:6379
+      # IMPORTANT: Paste your single-line GCP_SERVICE_ACCOUNT JSON here
+      - GCP_SERVICE_ACCOUNT=${GCP_SERVICE_ACCOUNT}
+      # Optional: Set your OpenAI API key for authentication
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Optional: Enable/disable thinking features
+      - ENABLE_FAKE_THINKING=${ENABLE_FAKE_THINKING:-true}
+      - ENABLE_REAL_THINKING=${ENABLE_REAL_THINKING:-true}
+      - STREAM_THINKING_AS_CONTENT=${STREAM_THINKING_AS_CONTENT:-true}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped

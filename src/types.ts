@@ -2,7 +2,8 @@
 export interface Env {
 	GCP_SERVICE_ACCOUNT: string; // Now contains OAuth2 credentials JSON
 	GEMINI_PROJECT_ID?: string;
-	GEMINI_CLI_KV: KVNamespace; // Cloudflare KV for token caching
+	REDIS_URL?: string; // Redis URL for token caching
+	PORT?: string; // Port for the server
 	OPENAI_API_KEY?: string; // Optional API key for authentication
 	ENABLE_FAKE_THINKING?: string; // Optional flag to enable fake thinking output (set to "true" to enable)
 	ENABLE_REAL_THINKING?: string; // Optional flag to enable real Gemini thinking output (set to "true" to enable)

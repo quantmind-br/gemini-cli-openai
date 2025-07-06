@@ -5,7 +5,7 @@ import { Env } from "../types";
  * Middleware to enforce OpenAI-style API key authentication if OPENAI_API_KEY is set in the environment.
  * Checks for 'Authorization: Bearer <key>' header on protected routes.
  */
-export const openAIApiKeyAuth: MiddlewareHandler<{ Bindings: Env }> = async (c, next) => {
+export const openAIApiKeyAuth: MiddlewareHandler = async (c, next) => {
 	// Skip authentication for public endpoints
 	const publicEndpoints = ["/", "/health"];
 	if (publicEndpoints.some((endpoint) => c.req.path === endpoint)) {
@@ -14,7 +14,8 @@ export const openAIApiKeyAuth: MiddlewareHandler<{ Bindings: Env }> = async (c, 
 	}
 
 	// If OPENAI_API_KEY is set in environment, require authentication
-	if (c.env.OPENAI_API_KEY) {
+	const apiKey = process.env.OPENAI_API_KEY;
+	if (apiKey) {
 		const authHeader = c.req.header("Authorization");
 
 		if (!authHeader) {
@@ -46,7 +47,7 @@ export const openAIApiKeyAuth: MiddlewareHandler<{ Bindings: Env }> = async (c, 
 		}
 
 		const providedKey = match[1];
-		if (providedKey !== c.env.OPENAI_API_KEY) {
+		if (providedKey !== apiKey) {
 			return c.json(
 				{
 					error: {

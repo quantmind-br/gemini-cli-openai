@@ -1,29 +1,29 @@
 ### Test the /v1/models endpoint
-GET https://gemini-cli-worker.gewoonjaap.workers.dev/v1/models
+GET http://localhost:3000/v1/models
 Content-Type: application/json
 
 ###
 
 ### Check KV cache status
-GET https://gemini-cli-worker.gewoonjaap.workers.dev/v1/debug/cache
+GET http://localhost:3000/v1/debug/cache
 Content-Type: application/json
 
 ###
 
 ### Test token authentication only
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/token-test
+POST http://localhost:3000/v1/token-test
 Content-Type: application/json
 
 ###
 
 ### Test authentication and basic functionality
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/test
+POST http://localhost:3000/v1/test
 Content-Type: application/json
 
 ###
 
 ### Test chat completions with gemini-2.5-flash (simple message)
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -39,7 +39,7 @@ Content-Type: application/json
 ###
 
 ### Test chat completions with system prompt
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -59,7 +59,7 @@ Content-Type: application/json
 ###
 
 ### Test chat completions with conversation history
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -83,7 +83,7 @@ Content-Type: application/json
 ###
 
 ### Test with gemini-2.0-flash-thinking model
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -99,7 +99,7 @@ Content-Type: application/json
 ###
 
 ### Test with experimental model
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -119,7 +119,7 @@ Content-Type: application/json
 ###
 
 ### Test error handling - invalid model
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -135,7 +135,7 @@ Content-Type: application/json
 ###
 
 ### Test error handling - empty messages
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -146,7 +146,7 @@ Content-Type: application/json
 ###
 
 ### Test chat completions with image support (Base64)
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -173,7 +173,7 @@ Content-Type: application/json
 ###
 
 ### Test chat completions with image support (URL)
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -201,7 +201,7 @@ Content-Type: application/json
 ###
 
 ### Test chat completions with multiple images
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {
@@ -234,7 +234,7 @@ Content-Type: application/json
 ###
 
 ### Test error handling - trying to use images with non-vision model
-POST https://gemini-cli-worker.gewoonjaap.workers.dev/v1/chat/completions
+POST http://localhost:3000/v1/chat/completions
 Content-Type: application/json
 
 {

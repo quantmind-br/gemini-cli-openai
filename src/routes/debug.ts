@@ -6,12 +6,13 @@ import { GeminiApiClient } from "../gemini-client";
 /**
  * Debug and testing routes for troubleshooting authentication and API functionality.
  */
-export const DebugRoute = new Hono<{ Bindings: Env }>();
+export const DebugRoute = new Hono();
 
 // Check KV cache status
 DebugRoute.get("/cache", async (c) => {
 	try {
-		const authManager = new AuthManager(c.env);
+		const env = process.env as any as Env;
+		const authManager = new AuthManager(env);
 		const cacheInfo = await authManager.getCachedTokenInfo();
 
 		// Remove sensitive information from the response
@@ -43,7 +44,8 @@ DebugRoute.get("/cache", async (c) => {
 DebugRoute.post("/token-test", async (c) => {
 	try {
 		console.log("Token test endpoint called");
-		const authManager = new AuthManager(c.env);
+		const env = process.env as any as Env;
+		const authManager = new AuthManager(env);
 
 		// Test authentication only
 		await authManager.initializeAuth();
@@ -71,8 +73,9 @@ DebugRoute.post("/token-test", async (c) => {
 DebugRoute.post("/test", async (c) => {
 	try {
 		console.log("Test endpoint called");
-		const authManager = new AuthManager(c.env);
-		const geminiClient = new GeminiApiClient(c.env, authManager);
+		const env = process.env as any as Env;
+		const authManager = new AuthManager(env);
+		const geminiClient = new GeminiApiClient(env, authManager);
 
 		// Test authentication
 		await authManager.initializeAuth();

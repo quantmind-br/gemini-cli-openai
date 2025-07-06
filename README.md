@@ -1,8 +1,8 @@
-# 🚀 Gemini CLI OpenAI Worker
+# 🚀 Gemini CLI OpenAI
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/mrproper)
 
-Transform Google's Gemini models into OpenAI-compatible endpoints using Cloudflare Workers. Access Google's most advanced AI models through familiar OpenAI API patterns, powered by OAuth2 authentication and the same infrastructure that drives the official Gemini CLI.
+Transform Google's Gemini models into OpenAI-compatible endpoints. Access Google's most advanced AI models through familiar OpenAI API patterns, powered by OAuth2 authentication and the same infrastructure that drives the official Gemini CLI.
 
 ## ✨ Features
 
@@ -11,8 +11,11 @@ Transform Google's Gemini models into OpenAI-compatible endpoints using Cloudfla
 - 📚 **OpenAI SDK Support** - Works with official OpenAI SDKs and libraries
 - 🖼️ **Vision Support** - Multi-modal conversations with images (base64 & URLs)
 - 🌐 **Third-party Integration** - Compatible with Open WebUI, ChatGPT clients, and more
-- ⚡ **Cloudflare Workers** - Global edge deployment with low latency
-- 🔄 **Smart Token Caching** - Intelligent token management with KV storage
+- 🐳 **Docker Support** - Easy deployment with Docker and Docker Compose
+- 🖼️ **Vision Support** - Multi-modal conversations with images (base64 & URLs)
+- 🌐 **Third-party Integration** - Compatible with Open WebUI, ChatGPT clients, and more
+- ⚡ **High Performance** - Built with Hono and Node.js for speed
+- 🔄 **Smart Token Caching** - Intelligent token management with Redis
 - 🆓 **Free Tier Access** - Leverage Google's free tier through Code Assist API
 - 📡 **Real-time Streaming** - Server-sent events for live responses
 - 🎭 **Multiple Models** - Access to latest Gemini models including experimental ones
@@ -36,19 +39,19 @@ Transform Google's Gemini models into OpenAI-compatible endpoints using Cloudfla
 > 
 > Set `STREAM_THINKING_AS_CONTENT=true` to stream reasoning as content with `<thinking>` tags (DeepSeek R1 style) instead of using the reasoning field.
 
-## 🛠️ Setup
+## 🐳 Docker Setup
 
 ### Prerequisites
 
 1. **Google Account** with access to Gemini
-2. **Cloudflare Account** with Workers enabled
-3. **Wrangler CLI** installed (`npm install -g wrangler`)
+2. **Docker** and **Docker Compose** installed
 
 ### Step 1: Get OAuth2 Credentials
 
 You need OAuth2 credentials from a Google account that has accessed Gemini. The easiest way to get these is through the official Gemini CLI.
 
 #### Using Gemini CLI
++
 
 1. **Install Gemini CLI**:
    ```bash
@@ -90,54 +93,39 @@ You need OAuth2 credentials from a Google account that has accessed Gemini. The 
    }
    ```
 
-### Step 2: Create KV Namespace
+
+
+### Step 2: Environment Setup
+
+1. Clone this repository.
+2. Create a `.env` file by copying the example:
+   ```bash
+   cp .env.example .env
+   ```
+3. Open the `.env` file and paste your single-line OAuth2 credentials JSON into the `GCP_SERVICE_ACCOUNT` variable.
+4. Configure other variables like `OPENAI_API_KEY` if needed.
+
+### Step 3: Run with Docker Compose
 
 ```bash
-# Create a KV namespace for token caching
-wrangler kv namespace create "GEMINI_CLI_KV"
+# Start the application and Redis
+docker-compose up -d
 ```
 
-Note the namespace ID returned.
-Update `wrangler.toml` with your KV namespace ID:
-```toml
-kv_namespaces = [
-  { binding = "GEMINI_CLI_KV", id = "your-kv-namespace-id" }
-]
-```
+Your Gemini OpenAI compatible API is now running at `http://localhost:3000`.
 
-### Step 3: Environment Setup
+### Building and Pushing to Docker Hub
 
-Create a `.dev.vars` file:
+Scripts are provided to build and push the Docker image to Docker Hub.
+
+**For Linux/macOS:**
 ```bash
-# Required: OAuth2 credentials JSON from Gemini CLI authentication
-GCP_SERVICE_ACCOUNT={"access_token":"ya29...","refresh_token":"1//...","scope":"...","token_type":"Bearer","id_token":"eyJ...","expiry_date":1750927763467}
-
-# Optional: Google Cloud Project ID (auto-discovered if not set)
-# GEMINI_PROJECT_ID=your-project-id
-
-# Optional: API key for authentication (if not set, API is public)
-# When set, clients must include "Authorization: Bearer <your-api-key>" header
-# Example: sk-1234567890abcdef1234567890abcdef
-OPENAI_API_KEY=sk-your-secret-api-key-here
+./build-and-push.sh
 ```
 
-For production, set the secrets:
-```bash
-wrangler secret put GCP_SERVICE_ACCOUNT
-wrangler secret put OPENAI_API_KEY  # Optional, only if you want authentication
-```
-
-### Step 4: Deploy
-
-```bash
-# Install dependencies
-npm install
-
-# Deploy to Cloudflare Workers
-npm run deploy
-
-# Or run locally for development
-npm run dev
+**For Windows:**
+```batch
+.\build-and-push.bat
 ```
 
 ## 🔧 Configuration
@@ -146,12 +134,14 @@ npm run dev
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `GCP_SERVICE_ACCOUNT` | ✅ | OAuth2 credentials JSON string |
+| `GCP_SERVICE_ACCOUNT` | ✅ | OAuth2 credentials JSON string (single line) |
 | `GEMINI_PROJECT_ID` | ❌ | Google Cloud Project ID (auto-discovered if not set) |
 | `OPENAI_API_KEY` | ❌ | API key for authentication (if not set, API is public) |
 | `ENABLE_FAKE_THINKING` | ❌ | Enable synthetic thinking output for thinking models (set to "true" to enable) |
 | `ENABLE_REAL_THINKING` | ❌ | Enable real Gemini thinking output (set to "true" to enable) |
 | `STREAM_THINKING_AS_CONTENT` | ❌ | Stream thinking as content with `<thinking>` tags (DeepSeek R1 style) |
+| `PORT` | ❌ | Port for the server to listen on (default: `3000`) |
+| `REDIS_URL` | ❌ | Connection URL for Redis cache (default: `redis://redis:6379`) |
 
 **Authentication Security:**
 - When `OPENAI_API_KEY` is set, all `/v1/*` endpoints require authentication
@@ -169,11 +159,7 @@ npm run dev
 - **Optimized UX**: The `</thinking>` tag is only sent when the actual LLM response begins, eliminating awkward pauses between thinking and response
 - If neither thinking mode is enabled, thinking models will behave like regular models
 
-### KV Namespaces
 
-| Binding | Purpose |
-|---------|---------|
-| `GEMINI_CLI_KV` | Token caching and session management |
 
 ## 🚨 Troubleshooting
 
@@ -204,7 +190,7 @@ npm run dev
 2. **Configure OpenAI API settings**:
    - Open Cline settings
    - Set **API Provider** to "OpenAI"
-   - Set **Base URL** to: `https://your-worker.workers.dev/v1`
+   - Set **Base URL** to: `http://localhost:3000/v1`
    - Set **API Key** to: `sk-your-secret-api-key-here` (use your OPENAI_API_KEY if authentication is enabled)
 
 3. **Select a model**:
@@ -214,8 +200,8 @@ npm run dev
 ### Open WebUI Integration
 
 1. **Add as OpenAI-compatible endpoint**:
-   - Base URL: `https://your-worker.workers.dev/v1`
-   - API Key: `sk-your-secret-api-key-here` (use your OPENAI_API_KEY if authentication is enabled)
+   - Base URL: `http://localhost:3000/v1`
+   - API Key: `your-api-key` (use your OPENAI_API_KEY if authentication is enabled)
 
 2. **Configure models**:
    Open WebUI will automatically discover available Gemini models through the `/v1/models` endpoint.
@@ -230,8 +216,8 @@ npm run dev
 ```python
 import litellm
 
-# Configure LiteLLM to use your worker
-litellm.api_base = "https://your-worker.workers.dev/v1"
+# Configure LiteLLM to use your local server
+litellm.api_base = "http://localhost:3000/v1"
 litellm.api_key = "sk-your-secret-api-key-here"
 
 # Use thinking models with LiteLLM
@@ -255,8 +241,8 @@ for chunk in response:
 from openai import OpenAI
 
 # Initialize with your worker endpoint
-client = OpenAI(
-    base_url="https://your-worker.workers.dev/v1",
+client = OpenAI( 
+    base_url="http://localhost:3000/v1",
     api_key="sk-your-secret-api-key-here"  # Use your OPENAI_API_KEY if authentication is enabled
 )
 
@@ -300,7 +286,7 @@ for chunk in response:
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  baseURL: 'https://your-worker.workers.dev/v1',
+  baseURL: 'http://localhost:3000/v1',
   apiKey: 'sk-your-secret-api-key-here', // Use your OPENAI_API_KEY if authentication is enabled
 });
 
@@ -320,7 +306,7 @@ for await (const chunk of stream) {
 
 ### cURL
 ```bash
-curl -X POST https://your-worker.workers.dev/v1/chat/completions \
+curl -X POST http://localhost:3000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-your-secret-api-key-here" \
   -d '{
@@ -333,7 +319,7 @@ curl -X POST https://your-worker.workers.dev/v1/chat/completions \
 
 ### Raw JavaScript/TypeScript
 ```javascript
-const response = await fetch('https://your-worker.workers.dev/v1/chat/completions', {
+const response = await fetch('http://localhost:3000/v1/chat/completions', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -373,7 +359,7 @@ while (true) {
 import requests
 import json
 
-url = "https://your-worker.workers.dev/v1/chat/completions"
+url = "http://localhost:3000/v1/chat/completions"
 data = {
     "model": "gemini-2.5-flash",
     "messages": [
@@ -398,7 +384,7 @@ for line in response.iter_lines():
 
 ### Base URL
 ```
-https://your-worker.your-subdomain.workers.dev
+http://localhost:3000
 ```
 
 ### List Models
@@ -511,7 +497,7 @@ with open("image.jpg", "rb") as image_file:
     base64_image = base64.b64encode(image_file.read()).decode('utf-8')
 
 client = OpenAI(
-    base_url="https://your-worker.workers.dev/v1",
+    base_url="http://localhost:3000/v1",
     api_key="sk-your-secret-api-key-here"
 )
 
@@ -541,7 +527,7 @@ print(response.choices[0].message.content)
 
 #### Example with Image URL
 ```bash
-curl -X POST https://your-worker.workers.dev/v1/chat/completions \
+curl -X POST http://localhost:3000/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer sk-your-secret-api-key-here" \
   -d '{
@@ -602,34 +588,34 @@ You can include multiple images in a single message:
 
 ```bash
 # Check KV cache status
-curl https://your-worker.workers.dev/v1/debug/cache
+curl http://localhost:3000/v1/debug/cache
 
 # Test authentication only
-curl -X POST https://your-worker.workers.dev/v1/token-test
+curl -X POST http://localhost:3000/v1/token-test
 
 # Test full flow
-curl -X POST https://your-worker.workers.dev/v1/test
+curl -X POST http://localhost:3000/v1/test
 ```
 
 
 ## 🏗️ How It Works
 
 ```mermaid
-graph TD
-    A[Client Request] --> B[Cloudflare Worker]
-    B --> C{Token in KV Cache?}
-    C -->|Yes| D[Use Cached Token]
-    C -->|No| E[Check Environment Token]
-    E --> F{Token Valid?}
-    F -->|Yes| G[Cache & Use Token]
-    F -->|No| H[Refresh Token]
-    H --> I[Cache New Token]
-    D --> J[Call Gemini API]
-    G --> J
-    I --> J
-    J --> K[Stream Response]
-    K --> L[OpenAI Format]
-    L --> M[Client Response]
+graph TD;
+    A[Client Request] --> B[Node.js Server (Hono)];
+    B --> C{Token in Redis Cache?};
+    C -->|Yes| D[Use Cached Token];
+    C -->|No| E[Check Environment Token];
+    E --> F{Token Valid?};
+    F -->|Yes| G[Cache & Use Token];
+    F -->|No| H[Refresh Token];
+    H --> I[Cache New Token];
+    D --> J[Call Gemini API];
+    G --> J;
+    I --> J;
+    J --> K[Stream Response];
+    K --> L[OpenAI Format];
+    L --> M[Client Response];
 ```
 
 The worker acts as a translation layer, converting OpenAI API calls to Google's Code Assist API format while managing OAuth2 authentication automatically.
@@ -649,7 +635,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🙏 Acknowledgments
 
 - Inspired by the official [Google Gemini CLI](https://github.com/google-gemini/gemini-cli)
-- Built on [Cloudflare Workers](https://workers.cloudflare.com/)
+- Built with [Node.js](https://nodejs.org/)
 - Uses [Hono](https://hono.dev/) web framework
 
 ---

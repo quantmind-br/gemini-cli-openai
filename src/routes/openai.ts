@@ -10,7 +10,7 @@ import { createOpenAIStreamTransformer } from "../stream-transformer";
 /**
  * OpenAI-compatible API routes for models and chat completions.
  */
-export const OpenAIRoute = new Hono<{ Bindings: Env }>();
+export const OpenAIRoute = new Hono();
 
 // List available models
 OpenAIRoute.get("/models", async (c) => {
@@ -38,7 +38,7 @@ OpenAIRoute.post("/chat/completions", async (c) => {
 		const stream = body.stream !== false;
 
 		// Check environment settings for real thinking
-		const isRealThinkingEnabled = c.env.ENABLE_REAL_THINKING === "true";
+		const isRealThinkingEnabled = process.env.ENABLE_REAL_THINKING === "true";
 		const includeReasoning = isRealThinkingEnabled; // Automatically enable reasoning when real thinking is enabled
 		const thinkingBudget = body.thinking_budget ?? DEFAULT_THINKING_BUDGET; // Default to dynamic allocation
 
@@ -102,8 +102,9 @@ OpenAIRoute.post("/chat/completions", async (c) => {
 		});
 
 		// Initialize services
-		const authManager = new AuthManager(c.env);
-		const geminiClient = new GeminiApiClient(c.env, authManager);
+		const env = process.env as any as Env;
+		const authManager = new AuthManager(env);
+		const geminiClient = new GeminiApiClient(env, authManager);
 
 		// Test authentication first
 		try {
