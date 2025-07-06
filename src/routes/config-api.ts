@@ -17,14 +17,12 @@ app.get('/', async (c) => {
 		const config = configManager.readConfig();
 		const fields = configManager.getConfigFields();
 		
-		// Don't send sensitive values in full (mask them)
+		// Don't send sensitive values in full (mask GCP credentials only)
 		const sanitizedConfig = { ...config };
 		if (sanitizedConfig.GCP_SERVICE_ACCOUNT) {
 			sanitizedConfig.GCP_SERVICE_ACCOUNT = '[CONFIGURED]';
 		}
-		if (sanitizedConfig.OPENAI_API_KEY) {
-			sanitizedConfig.OPENAI_API_KEY = '[CONFIGURED]';
-		}
+		// Note: OPENAI_API_KEY is now sent to allow display in dashboard
 
 		return c.json({
 			config: sanitizedConfig,

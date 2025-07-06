@@ -38,7 +38,12 @@ class Dashboard {
             if (input) {
                 if (input.type === 'checkbox') {
                     input.checked = value === 'true';
-                } else if (input.type !== 'password') {
+                } else if (input.type === 'password') {
+                    // For password fields, show the actual value if it exists
+                    if (value && value !== '[CONFIGURED]') {
+                        input.value = value;
+                    }
+                } else {
                     input.value = value === '[CONFIGURED]' ? '' : value;
                 }
             }
@@ -78,6 +83,11 @@ class Dashboard {
         // Generate API Key button
         document.getElementById('generateApiKey').addEventListener('click', () => {
             this.generateApiKey();
+        });
+
+        // Toggle API Key visibility button
+        document.getElementById('toggleApiKey').addEventListener('click', () => {
+            this.toggleApiKeyVisibility();
         });
 
         // File upload
@@ -336,6 +346,19 @@ class Dashboard {
         setTimeout(() => {
             apiKeyInput.type = 'password';
         }, 3000);
+    }
+
+    toggleApiKeyVisibility() {
+        const apiKeyInput = document.getElementById('openai-api-key');
+        const toggleButton = document.getElementById('toggleApiKey');
+        
+        if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+            toggleButton.textContent = 'Hide';
+        } else {
+            apiKeyInput.type = 'password';
+            toggleButton.textContent = 'Show';
+        }
     }
 
     showNotification(message, type) {
