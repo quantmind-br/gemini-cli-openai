@@ -11,17 +11,12 @@ services:
     environment:
       - PORT=3000
       - REDIS_URL=redis://redis:6379
-      # IMPORTANT: Paste your single-line GCP_SERVICE_ACCOUNT JSON here
-      - GCP_SERVICE_ACCOUNT=${GCP_SERVICE_ACCOUNT}
-      # Optional: Set your OpenAI API key for authentication
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      # Optional: Enable/disable thinking features
-      - ENABLE_FAKE_THINKING=${ENABLE_FAKE_THINKING:-false}
-      - ENABLE_REAL_THINKING=${ENABLE_REAL_THINKING:-true}
-      - STREAM_THINKING_AS_CONTENT=${STREAM_THINKING_AS_CONTENT:-false}
-      # Dashboard authentication credentials
+      # Dashboard authentication credentials (required for dashboard access)
       - DASHBOARD_USERNAME=${DASHBOARD_USERNAME}
       - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}
+      # NOTE: Other environment variables (GCP_SERVICE_ACCOUNT, OPENAI_API_KEY, thinking features)
+      # should be configured through the dashboard interface at /dashboard
+      # to ensure proper override and persistence in the data/.env file
     depends_on:
       - redis
     restart: unless-stopped

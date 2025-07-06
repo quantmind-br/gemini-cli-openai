@@ -102,7 +102,7 @@ OpenAIRoute.post("/chat/completions", async (c) => {
 		});
 
 		// Initialize services
-		const env = process.env as any as Env;
+		const env = process.env as unknown as Env;
 		const authManager = new AuthManager(env);
 		const geminiClient = new GeminiApiClient(env, authManager);
 

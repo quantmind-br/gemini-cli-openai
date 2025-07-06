@@ -233,6 +233,8 @@ body {
     cursor: pointer;
     font-weight: 600;
     margin-bottom: 0;
+    min-height: 24px;
+    line-height: 1.4;
 }
 
 .checkbox-input {
@@ -241,8 +243,8 @@ body {
 }
 
 .checkbox-custom {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border: 2px solid #e9ecef;
     border-radius: 3px;
     margin-right: 12px;
@@ -250,6 +252,7 @@ body {
     position: relative;
     flex-shrink: 0;
     transition: border-color 0.3s, background-color 0.3s;
+    background-color: #fff;
 }
 
 .checkbox-input:checked + .checkbox-custom {
@@ -264,22 +267,50 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     color: white;
-    font-size: 14px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.checkbox-input:focus + .checkbox-custom {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 /* Checkbox form group spacing */
 .form-group:has(.checkbox-label) {
-    margin-bottom: 25px;
+    margin-bottom: 30px !important;
+}
+
+.checkbox-label .form-help {
+    margin-top: 5px;
+    margin-left: 30px;
 }
 
 /* Fallback for browsers that don't support :has() */
 .form-group .checkbox-label {
-    line-height: 1.4;
+    line-height: 1.4 !important;
 }
 
 .form-group .checkbox-label + .form-help {
     margin-top: 8px;
     margin-left: 32px;
+}
+
+/* Force checkbox spacing */
+.form-section .form-group {
+    margin-bottom: 25px;
+}
+
+.form-section .form-group:has(.checkbox-label) {
+    margin-bottom: 35px !important;
+}
+
+/* Ensure checkbox custom styling is applied */
+.checkbox-custom {
+    display: inline-block !important;
+    width: 18px !important;
+    height: 18px !important;
+    margin-right: 12px !important;
 }
 
 /* Buttons */

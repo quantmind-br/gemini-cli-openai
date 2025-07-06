@@ -28,10 +28,27 @@ COPY --from=builder /app/public ./public
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Create data directory and .env file with proper permissions
-RUN mkdir -p data && chown -R nodejs:nodejs data
-
-USER nodejs
+# Create data directory with proper permissions
+RUN mkdir -p data && chown -R nodejs:nodejs data && chmod -R 755 data
 
 EXPOSE 3000
-CMD ["node", "dist/index.js"]
+
+# Create startup script to handle permissions and debugging in production
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "🔧 Setting up data directory permissions..."' >> /app/start.sh && \
+    echo 'mkdir -p /app/data 2>/dev/null || true' >> /app/start.sh && \
+    echo 'chown -R nodejs:nodejs /app/data 2>/dev/null || true' >> /app/start.sh && \
+    echo 'chmod -R 755 /app/data 2>/dev/null || true' >> /app/start.sh && \
+    echo 'echo "📁 Data directory status:"' >> /app/start.sh && \
+    echo 'ls -la /app/data/ 2>/dev/null || echo "  Data directory is empty or does not exist"' >> /app/start.sh && \
+    echo 'if [ -f /app/data/.env ]; then' >> /app/start.sh && \
+    echo '  echo "✅ Found data/.env file"' >> /app/start.sh && \
+    echo '  echo "📄 File permissions: $(ls -la /app/data/.env)"' >> /app/start.sh && \
+    echo 'else' >> /app/start.sh && \
+    echo '  echo "⚠️  No data/.env file found - using environment variables"' >> /app/start.sh && \
+    echo 'fi' >> /app/start.sh && \
+    echo 'exec su-exec nodejs node dist/index.js' >> /app/start.sh && \
+    chmod +x /app/start.sh && \
+    apk add --no-cache su-exec
+
+CMD ["/app/start.sh"]

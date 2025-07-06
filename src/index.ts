@@ -1,3 +1,6 @@
+import { config } from "dotenv";
+import * as path from "path";
+import * as fs from "fs";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { OpenAIRoute } from "./routes/openai";
@@ -7,6 +10,66 @@ import { ConfigApiRoute } from "./routes/config-api";
 import { AuthRoute } from "./routes/auth";
 import { openAIApiKeyAuth } from "./middlewares/auth";
 import { loggingMiddleware } from "./middlewares/logging";
+
+// Load configuration from data/.env if it exists (dashboard configuration)
+const dataEnvPath = path.resolve('./data/.env');
+console.log(`🔍 Checking for dashboard configuration at: ${dataEnvPath}`);
+
+try {
+	// Check if the data directory exists
+	const dataDir = path.dirname(dataEnvPath);
+	if (!fs.existsSync(dataDir)) {
+		console.log(`📁 Data directory does not exist: ${dataDir}`);
+		console.log('⚠️  No dashboard configuration available - using environment variables');
+	} else {
+		console.log(`✅ Data directory exists: ${dataDir}`);
+		
+		// List contents of data directory for debugging
+		try {
+			const files = fs.readdirSync(dataDir);
+			console.log(`📄 Data directory contents: ${files.length > 0 ? files.join(', ') : '(empty)'}`);
+		} catch (dirError) {
+			console.log(`❌ Could not read data directory: ${dirError}`);
+		}
+		
+		// Check if .env file exists and is readable
+		if (fs.existsSync(dataEnvPath)) {
+			try {
+				const stats = fs.statSync(dataEnvPath);
+				console.log(`📄 Found data/.env file (${stats.size} bytes, modified: ${stats.mtime.toISOString()})`);
+				
+				// Read and validate the file content
+				const envContent = fs.readFileSync(dataEnvPath, 'utf8');
+				console.log(`📝 data/.env content preview: ${envContent.substring(0, 100)}${envContent.length > 100 ? '...' : ''}`);
+				
+				// Load the configuration with override
+				console.log('🔄 Loading dashboard configuration with override=true...');
+				const result = config({ path: dataEnvPath, override: true });
+				
+				if (result.error) {
+					console.error('❌ Error loading data/.env:', result.error);
+				} else {
+					console.log('✅ Dashboard configuration loaded successfully');
+					
+					// Verify key environment variables were loaded
+					if (process.env.GCP_SERVICE_ACCOUNT) {
+						console.log('🔐 GCP_SERVICE_ACCOUNT found in environment after loading dashboard config');
+					} else {
+						console.log('⚠️  GCP_SERVICE_ACCOUNT not found in environment after loading dashboard config');
+					}
+				}
+			} catch (fileError) {
+				console.error(`❌ Error reading data/.env file: ${fileError}`);
+			}
+		} else {
+			console.log(`⚠️  data/.env file does not exist at: ${dataEnvPath}`);
+			console.log('⚠️  No dashboard configuration available - using environment variables');
+		}
+	}
+} catch (error) {
+	console.error(`❌ Error checking dashboard configuration: ${error}`);
+	console.log('⚠️  Falling back to environment variables');
+}
 
 /**
  * Gemini CLI OpenAI Server
