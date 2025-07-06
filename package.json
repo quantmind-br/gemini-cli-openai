@@ -1,5 +1,5 @@
 {
-  "name": "gemini-cli-worker",
+  "name": "gemini-cli-openai",
   "version": "1.0.0",
   "private": true,
   "scripts": {
