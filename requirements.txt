@@ -1,3 +1,0 @@
-# Dependências para testes da API
-requests>=2.31.0
-openai>=1.0.0
