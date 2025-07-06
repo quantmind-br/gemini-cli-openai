@@ -8,6 +8,8 @@ export interface Env {
 	ENABLE_FAKE_THINKING?: string; // Optional flag to enable fake thinking output (set to "true" to enable)
 	ENABLE_REAL_THINKING?: string; // Optional flag to enable real Gemini thinking output (set to "true" to enable)
 	STREAM_THINKING_AS_CONTENT?: string; // Optional flag to stream thinking as content with <thinking> tags (set to "true" to enable)
+	DASHBOARD_USERNAME?: string; // Username for dashboard authentication
+	DASHBOARD_PASSWORD?: string; // Password for dashboard authentication
 }
 
 // --- OAuth2 Credentials Interface ---
@@ -95,4 +97,25 @@ export interface ReasoningData {
 export interface StreamChunk {
 	type: "text" | "usage" | "reasoning" | "thinking_content" | "real_thinking";
 	data: string | UsageData | ReasoningData;
+}
+
+// --- Dashboard Configuration Types ---
+export interface DashboardConfig {
+	GCP_SERVICE_ACCOUNT?: string;
+	GEMINI_PROJECT_ID?: string;
+	REDIS_URL?: string;
+	PORT?: string;
+	OPENAI_API_KEY?: string;
+	ENABLE_FAKE_THINKING?: string;
+	ENABLE_REAL_THINKING?: string;
+	STREAM_THINKING_AS_CONTENT?: string;
+}
+
+export interface ConfigField {
+	key: keyof DashboardConfig;
+	label: string;
+	type: "text" | "password" | "number" | "boolean" | "file";
+	required: boolean;
+	description: string;
+	placeholder?: string;
 }

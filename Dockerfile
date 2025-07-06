@@ -21,9 +21,16 @@ RUN npm install --only=production
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
+# Copy public dashboard files
+COPY --from=builder /app/public ./public
+
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
+
+# Create .env file with proper permissions
+RUN touch .env && chown nodejs:nodejs .env
+
 USER nodejs
 
 EXPOSE 3000

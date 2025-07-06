@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { Env } from "./types";
 import { OpenAIRoute } from "./routes/openai";
 import { DebugRoute } from "./routes/debug";
+import { DashboardRoute } from "./routes/dashboard";
+import { ConfigApiRoute } from "./routes/config-api";
+import { AuthRoute } from "./routes/auth";
 import { openAIApiKeyAuth } from "./middlewares/auth";
 import { loggingMiddleware } from "./middlewares/logging";
 
@@ -51,6 +53,11 @@ app.route("/v1/debug", DebugRoute);
 // Add individual debug routes to main app for backward compatibility
 app.route("/v1", DebugRoute);
 
+// Dashboard routes
+app.route("/dashboard", DashboardRoute);
+app.route("/api/config", ConfigApiRoute);
+app.route("/api/auth", AuthRoute);
+
 // Root endpoint - basic info about the service
 app.get("/", (c) => {
 	const requiresAuth = !!process.env.OPENAI_API_KEY;
@@ -66,6 +73,7 @@ app.get("/", (c) => {
 		endpoints: {
 			chat_completions: "/v1/chat/completions",
 			models: "/v1/models",
+			dashboard: "/dashboard",
 			debug: {
 				cache: "/v1/debug/cache",
 				token_test: "/v1/token-test",

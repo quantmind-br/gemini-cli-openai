@@ -3,7 +3,7 @@
 
 services:
   gemini-cli-openai:
-    build: .
+    image: drnit29/gemini-cli-openai:latest
     ports:
       - "3000:3000"
     environment:
@@ -17,6 +17,9 @@ services:
       - ENABLE_FAKE_THINKING=${ENABLE_FAKE_THINKING:-true}
       - ENABLE_REAL_THINKING=${ENABLE_REAL_THINKING:-true}
       - STREAM_THINKING_AS_CONTENT=${STREAM_THINKING_AS_CONTENT:-true}
+      # Dashboard authentication credentials
+      - DASHBOARD_USERNAME=${DASHBOARD_USERNAME}
+      - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}
     depends_on:
       - redis
     restart: unless-stopped

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini CLI OpenAI - Login</title>
+    <link rel="stylesheet" href="/dashboard/styles.css?v=1.1">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <h1>🚀 Gemini CLI OpenAI</h1>
+                <p>Dashboard Login</p>
+            </div>
+            
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required class="form-input">
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-full">Login</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>Configure your Gemini CLI OpenAI server settings</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const notification = document.getElementById('notification');
+            
+            console.log('Attempting login with:', {
+                username: formData.get('username'),
+                password: formData.get('password') ? '[PASSWORD_SET]' : '[NO_PASSWORD]'
+            });
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                console.log('Login response status:', response.status);
+                
+                const result = await response.json();
+                console.log('Login result:', result);
+                
+                if (result.success) {
+                    showNotification('Login successful!', 'success');
+                    setTimeout(() => {
+                        window.location.href = result.redirect || '/dashboard';
+                    }, 1000);
+                } else {
+                    showNotification(result.error || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('Login failed. Please try again.', 'error');
+            }
+        });
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

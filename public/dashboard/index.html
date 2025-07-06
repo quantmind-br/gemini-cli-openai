@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini CLI OpenAI - Dashboard</title>
+    <link rel="stylesheet" href="/dashboard/styles.css?v=1.1">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 Gemini CLI OpenAI Dashboard</h1>
+            <button id="logoutBtn" class="logout-btn">Logout</button>
+        </header>
+
+        <main class="main">
+            <div class="status-section">
+                <h2>Configuration Status</h2>
+                <div id="statusCards" class="status-cards">
+                    <!-- Status cards will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <div class="config-section">
+                <h2>Configuration</h2>
+                <form id="configForm" class="config-form">
+                    <div class="form-section">
+                        <h3>Authentication</h3>
+                        <div class="form-group">
+                            <label for="gcp-upload">GCP Service Account Credentials <span class="required">*</span></label>
+                            <div class="file-upload-container">
+                                <input type="file" id="gcp-upload" accept=".json" class="file-input">
+                                <label for="gcp-upload" class="file-label">
+                                    <span class="file-text">Choose JSON file or drag here</span>
+                                </label>
+                            </div>
+                            <p class="form-help">Upload the OAuth2 credentials JSON file from Gemini CLI authentication</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="openai-api-key">OpenAI API Key</label>
+                            <input type="password" id="openai-api-key" name="OPENAI_API_KEY" 
+                                   placeholder="sk-your-secret-api-key-here" class="form-input">
+                            <p class="form-help">Optional: API key for authentication. If not set, API is public</p>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Server Settings</h3>
+                        <div class="form-group">
+                            <label for="port">Server Port</label>
+                            <input type="number" id="port" name="PORT" 
+                                   placeholder="3000" class="form-input">
+                            <p class="form-help">Port for the application to listen on</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="redis-url">Redis URL</label>
+                            <input type="text" id="redis-url" name="REDIS_URL" 
+                                   placeholder="redis://redis:6379" class="form-input">
+                            <p class="form-help">Redis connection URL for caching</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="project-id">Gemini Project ID</label>
+                            <input type="text" id="project-id" name="GEMINI_PROJECT_ID" 
+                                   placeholder="your-project-id" class="form-input">
+                            <p class="form-help">Google Cloud Project ID (auto-discovered if not set)</p>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Feature Flags</h3>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enable-fake-thinking" name="ENABLE_FAKE_THINKING" class="checkbox-input">
+                                <span class="checkbox-custom"></span>
+                                Enable Fake Thinking
+                            </label>
+                            <p class="form-help">Enable synthetic thinking output for thinking models</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enable-real-thinking" name="ENABLE_REAL_THINKING" class="checkbox-input">
+                                <span class="checkbox-custom"></span>
+                                Enable Real Thinking
+                            </label>
+                            <p class="form-help">Enable real Gemini thinking output with native reasoning</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="stream-thinking" name="STREAM_THINKING_AS_CONTENT" class="checkbox-input">
+                                <span class="checkbox-custom"></span>
+                                Stream Thinking as Content
+                            </label>
+                            <p class="form-help">Stream thinking as content with &lt;thinking&gt; tags (DeepSeek R1 style)</p>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" id="testBtn" class="btn btn-secondary">Test Configuration</button>
+                        <button type="submit" class="btn btn-primary">Save Configuration</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="test-section" id="testSection" style="display: none;">
+                <h2>Configuration Test Results</h2>
+                <div id="testResults" class="test-results">
+                    <!-- Test results will be populated by JavaScript -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="/dashboard/script.js?v=1.1"></script>
+</body>
+</html>
