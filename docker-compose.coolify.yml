@@ -6,6 +6,8 @@ services:
     image: drnit29/gemini-cli-openai:latest
     ports:
       - "3000:3000"
+    volumes:
+      - ./data:/app/data
     environment:
       - PORT=3000
       - REDIS_URL=redis://redis:6379
@@ -14,9 +16,9 @@ services:
       # Optional: Set your OpenAI API key for authentication
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       # Optional: Enable/disable thinking features
-      - ENABLE_FAKE_THINKING=${ENABLE_FAKE_THINKING:-true}
+      - ENABLE_FAKE_THINKING=${ENABLE_FAKE_THINKING:-false}
       - ENABLE_REAL_THINKING=${ENABLE_REAL_THINKING:-true}
-      - STREAM_THINKING_AS_CONTENT=${STREAM_THINKING_AS_CONTENT:-true}
+      - STREAM_THINKING_AS_CONTENT=${STREAM_THINKING_AS_CONTENT:-false}
       # Dashboard authentication credentials
       - DASHBOARD_USERNAME=${DASHBOARD_USERNAME}
       - DASHBOARD_PASSWORD=${DASHBOARD_PASSWORD}

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gemini CLI OpenAI - Dashboard</title>
-    <link rel="stylesheet" href="/dashboard/styles.css?v=1.1">
+    <link rel="stylesheet" href="/dashboard/styles.css?v=1.3">
 </head>
 <body>
     <div class="container">
@@ -39,28 +39,17 @@
 
                         <div class="form-group">
                             <label for="openai-api-key">OpenAI API Key</label>
-                            <input type="password" id="openai-api-key" name="OPENAI_API_KEY" 
-                                   placeholder="sk-your-secret-api-key-here" class="form-input">
+                            <div class="api-key-container">
+                                <input type="password" id="openai-api-key" name="OPENAI_API_KEY" 
+                                       placeholder="sk-your-secret-api-key-here" class="form-input api-key-input">
+                                <button type="button" id="generateApiKey" class="btn btn-secondary btn-sm">Generate</button>
+                            </div>
                             <p class="form-help">Optional: API key for authentication. If not set, API is public</p>
                         </div>
                     </div>
 
                     <div class="form-section">
                         <h3>Server Settings</h3>
-                        <div class="form-group">
-                            <label for="port">Server Port</label>
-                            <input type="number" id="port" name="PORT" 
-                                   placeholder="3000" class="form-input">
-                            <p class="form-help">Port for the application to listen on</p>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="redis-url">Redis URL</label>
-                            <input type="text" id="redis-url" name="REDIS_URL" 
-                                   placeholder="redis://redis:6379" class="form-input">
-                            <p class="form-help">Redis connection URL for caching</p>
-                        </div>
-
                         <div class="form-group">
                             <label for="project-id">Gemini Project ID</label>
                             <input type="text" id="project-id" name="GEMINI_PROJECT_ID" 
@@ -117,6 +106,6 @@
 
     <div id="notification" class="notification"></div>
 
-    <script src="/dashboard/script.js?v=1.1"></script>
+    <script src="/dashboard/script.js?v=1.3"></script>
 </body>
 </html>

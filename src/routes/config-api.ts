@@ -224,21 +224,9 @@ app.post('/test', async (c) => {
 			}
 		}
 
-		// Test port
-		if (config.PORT) {
-			const port = Number(config.PORT);
-			tests.port = !isNaN(port) && port > 0 && port < 65536;
-		} else {
-			tests.port = true; // Default port is fine
-		}
-
-		// Note: Redis connection test would require actual connection attempt
-		// For now, just validate URL format
-		if (config.REDIS_URL) {
-			tests.redisConnection = config.REDIS_URL.startsWith('redis://');
-		} else {
-			tests.redisConnection = true; // Default Redis is fine
-		}
+		// Port and Redis use default values, always considered valid
+		tests.port = true;
+		tests.redisConnection = true;
 
 		return c.json({
 			tests,

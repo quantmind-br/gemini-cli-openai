@@ -28,8 +28,8 @@ COPY --from=builder /app/public ./public
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
-# Create .env file with proper permissions
-RUN touch .env && chown nodejs:nodejs .env
+# Create data directory and .env file with proper permissions
+RUN mkdir -p data && chown -R nodejs:nodejs data
 
 USER nodejs
 

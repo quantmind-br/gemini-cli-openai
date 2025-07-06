@@ -103,8 +103,6 @@ export interface StreamChunk {
 export interface DashboardConfig {
 	GCP_SERVICE_ACCOUNT?: string;
 	GEMINI_PROJECT_ID?: string;
-	REDIS_URL?: string;
-	PORT?: string;
 	OPENAI_API_KEY?: string;
 	ENABLE_FAKE_THINKING?: string;
 	ENABLE_REAL_THINKING?: string;

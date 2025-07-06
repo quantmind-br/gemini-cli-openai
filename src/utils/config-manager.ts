@@ -5,7 +5,7 @@ import { DashboardConfig, ConfigField } from '../types';
 export class ConfigManager {
 	private envPath: string;
 
-	constructor(envPath: string = '.env') {
+	constructor(envPath: string = './data/.env') {
 		this.envPath = path.resolve(envPath);
 	}
 
@@ -66,8 +66,8 @@ export class ConfigManager {
 						const configKey = key.trim() as keyof DashboardConfig;
 						const value = config[configKey];
 						if (value !== undefined) {
-							// Quote the value if it contains spaces or special characters
-							const quotedValue = this.shouldQuoteValue(value) ? `'${value}'` : value;
+							// Handle value quoting properly
+							const quotedValue = this.formatEnvValue(value);
 							content += `${key.trim()}=${quotedValue}\n`;
 							processedKeys.add(key.trim());
 						} else {
@@ -87,7 +87,7 @@ export class ConfigManager {
 			// Add any new config keys that weren't in the existing file
 			for (const [key, value] of Object.entries(config)) {
 				if (!processedKeys.has(key) && value !== undefined) {
-					const quotedValue = this.shouldQuoteValue(value) ? `'${value}'` : value;
+					const quotedValue = this.formatEnvValue(value);
 					content += `${key}=${quotedValue}\n`;
 				}
 			}
@@ -117,11 +117,6 @@ export class ConfigManager {
 			}
 		}
 
-		// Validate PORT is a number
-		if (config.PORT && isNaN(Number(config.PORT))) {
-			errors.push('PORT must be a valid number');
-		}
-
 		// Validate boolean fields
 		const booleanFields = ['ENABLE_FAKE_THINKING', 'ENABLE_REAL_THINKING', 'STREAM_THINKING_AS_CONTENT'];
 		for (const field of booleanFields) {
@@ -129,11 +124,6 @@ export class ConfigManager {
 			if (value && !['true', 'false'].includes(value.toLowerCase())) {
 				errors.push(`${field} must be 'true' or 'false'`);
 			}
-		}
-
-		// Validate REDIS_URL format
-		if (config.REDIS_URL && !config.REDIS_URL.startsWith('redis://')) {
-			errors.push('REDIS_URL must start with redis://');
 		}
 
 		return {
@@ -162,22 +152,6 @@ export class ConfigManager {
 				required: false,
 				description: 'Optional API key for authentication. If not set, API is public',
 				placeholder: 'sk-your-secret-api-key-here'
-			},
-			{
-				key: 'PORT',
-				label: 'Server Port',
-				type: 'number',
-				required: false,
-				description: 'Port for the application to listen on',
-				placeholder: '3000'
-			},
-			{
-				key: 'REDIS_URL',
-				label: 'Redis URL',
-				type: 'text',
-				required: false,
-				description: 'Redis connection URL for caching',
-				placeholder: 'redis://redis:6379'
 			},
 			{
 				key: 'GEMINI_PROJECT_ID',
@@ -215,11 +189,44 @@ export class ConfigManager {
 	}
 
 	/**
+	 * Format value for .env file with proper quoting
+	 */
+	private formatEnvValue(value: string): string {
+		// Handle JSON values specially - compact and quote
+		if (this.isJsonValue(value)) {
+			try {
+				// Parse and re-stringify to ensure single line, valid JSON
+				const parsed = JSON.parse(value);
+				const compactJson = JSON.stringify(parsed);
+				return `'${compactJson}'`;
+			} catch {
+				// If parsing fails, just compact whitespace
+				const compactJson = value.replace(/\s+/g, ' ').replace(/\n/g, '').trim();
+				return `'${compactJson}'`;
+			}
+		}
+		
+		// For other values, quote if they contain spaces or special characters
+		if (this.shouldQuoteValue(value)) {
+			return `'${value}'`;
+		}
+		
+		return value;
+	}
+
+	/**
+	 * Check if a value is a JSON string
+	 */
+	private isJsonValue(value: string): boolean {
+		return value.trim().startsWith('{') && value.trim().endsWith('}');
+	}
+
+	/**
 	 * Check if a value should be quoted in the .env file
 	 */
 	private shouldQuoteValue(value: string): boolean {
-		// Quote if contains spaces, special characters, or is JSON
-		return /[\s#"'$\\]/.test(value) || value.startsWith('{');
+		// Quote if contains spaces or special env characters
+		return /[\s#$\\]/.test(value);
 	}
 
 	/**
@@ -227,24 +234,12 @@ export class ConfigManager {
 	 */
 	private generateNewEnvContent(config: DashboardConfig): string {
 		let content = '# Gemini CLI OpenAI Docker Environment Variables\n\n';
-		
-		// Port
-		if (config.PORT) {
-			content += '# Port for the application to listen on\n';
-			content += `PORT=${config.PORT}\n\n`;
-		}
-
-		// Redis
-		if (config.REDIS_URL) {
-			content += '# Redis connection URL for caching\n';
-			content += `REDIS_URL=${config.REDIS_URL}\n\n`;
-		}
 
 		// GCP Service Account
 		if (config.GCP_SERVICE_ACCOUNT) {
 			content += '# Required: OAuth2 credentials JSON from Gemini CLI authentication\n';
 			content += '# IMPORTANT: This should be a single line with no line breaks.\n';
-			const quotedValue = this.shouldQuoteValue(config.GCP_SERVICE_ACCOUNT) ? `'${config.GCP_SERVICE_ACCOUNT}'` : config.GCP_SERVICE_ACCOUNT;
+			const quotedValue = this.formatEnvValue(config.GCP_SERVICE_ACCOUNT);
 			content += `GCP_SERVICE_ACCOUNT=${quotedValue}\n\n`;
 		}
 

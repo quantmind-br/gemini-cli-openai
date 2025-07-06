@@ -180,6 +180,22 @@ body {
     margin-top: 5px;
 }
 
+/* API Key Container */
+.api-key-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.api-key-input {
+    flex: 1;
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 0.875rem;
+}
+
 /* File upload */
 .file-upload-container {
     position: relative;
@@ -213,9 +229,10 @@ body {
 /* Checkbox */
 .checkbox-label {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     cursor: pointer;
     font-weight: 600;
+    margin-bottom: 0;
 }
 
 .checkbox-input {
@@ -228,8 +245,10 @@ body {
     height: 20px;
     border: 2px solid #e9ecef;
     border-radius: 3px;
-    margin-right: 10px;
+    margin-right: 12px;
+    margin-top: 2px;
     position: relative;
+    flex-shrink: 0;
     transition: border-color 0.3s, background-color 0.3s;
 }
 
@@ -246,6 +265,21 @@ body {
     transform: translate(-50%, -50%);
     color: white;
     font-size: 14px;
+}
+
+/* Checkbox form group spacing */
+.form-group:has(.checkbox-label) {
+    margin-bottom: 25px;
+}
+
+/* Fallback for browsers that don't support :has() */
+.form-group .checkbox-label {
+    line-height: 1.4;
+}
+
+.form-group .checkbox-label + .form-help {
+    margin-top: 8px;
+    margin-left: 32px;
 }
 
 /* Buttons */

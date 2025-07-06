@@ -75,6 +75,11 @@ class Dashboard {
             this.logout();
         });
 
+        // Generate API Key button
+        document.getElementById('generateApiKey').addEventListener('click', () => {
+            this.generateApiKey();
+        });
+
         // File upload
         document.getElementById('gcp-upload').addEventListener('change', (e) => {
             this.handleFileUpload(e);
@@ -297,6 +302,40 @@ class Dashboard {
             console.error('Logout failed:', error);
             this.showNotification('Logout failed', 'error');
         }
+    }
+
+    generateApiKey() {
+        // Generate a secure random API key in OpenAI format
+        const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const keyLength = 48; // OpenAI keys are typically 48 characters after 'sk-'
+        let randomString = '';
+        
+        // Use crypto.getRandomValues for secure random generation
+        const array = new Uint8Array(keyLength);
+        crypto.getRandomValues(array);
+        
+        for (let i = 0; i < keyLength; i++) {
+            randomString += characters[array[i] % characters.length];
+        }
+        
+        const apiKey = `sk-${randomString}`;
+        
+        // Set the generated key in the input field
+        const apiKeyInput = document.getElementById('openai-api-key');
+        apiKeyInput.type = 'text'; // Temporarily show as text
+        apiKeyInput.value = apiKey;
+        
+        // Copy to clipboard
+        navigator.clipboard.writeText(apiKey).then(() => {
+            this.showNotification('API key generated and copied to clipboard!', 'success');
+        }).catch(() => {
+            this.showNotification('API key generated! Please copy it manually.', 'info');
+        });
+        
+        // Switch back to password type after 3 seconds
+        setTimeout(() => {
+            apiKeyInput.type = 'password';
+        }, 3000);
     }
 
     showNotification(message, type) {

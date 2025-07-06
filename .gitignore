@@ -1,6 +1,6 @@
 # Auth
 
-oauth_creds.json
+# oauth_creds.json
 
 # shotgun
 .shotgunignore
@@ -143,3 +143,6 @@ dist
 .pnp.*
 .dev.vars
 .wrangler/
+
+# Data directory for persistent configuration
+data/
