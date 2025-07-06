@@ -146,3 +146,4 @@ dist
 
 # Data directory for persistent configuration
 data/
+oauth_creds.json
