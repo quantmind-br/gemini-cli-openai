@@ -107,24 +107,51 @@ class LogBuffer {
 // Global log buffer instance
 export const logBuffer = new LogBuffer();
 
-// Create logs directory if it doesn't exist
-const logsDir = path.resolve('./logs');
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
+// Create logs directory if it doesn't exist (with error handling)
+// Try to use the data directory first (which should have correct permissions), then /tmp as fallback
+let logsDir: string = '/tmp';
+let logsDirectoryAvailable = false;
+
+// Try data directory first
+try {
+  const dataLogsDir = path.resolve('./data/logs');
+  if (!fs.existsSync(dataLogsDir)) {
+    fs.mkdirSync(dataLogsDir, { recursive: true });
+  }
+  logsDir = dataLogsDir;
+  logsDirectoryAvailable = true;
+  console.log('✅ Using data/logs directory for file logging');
+} catch (dataError) {
+  // Try /tmp directory as fallback
+  try {
+    const tmpLogsDir = '/tmp/gemini-logs';
+    if (!fs.existsSync(tmpLogsDir)) {
+      fs.mkdirSync(tmpLogsDir, { recursive: true });
+    }
+    logsDir = tmpLogsDir;
+    logsDirectoryAvailable = true;
+    console.warn('⚠️  Using /tmp for logs directory due to permission issues with data directory');
+  } catch (tmpError) {
+    console.warn('⚠️  Failed to create any logs directory, file logging will be disabled');
+    console.warn('   Data error:', dataError);
+    console.warn('   Tmp error:', tmpError);
+    logsDirectoryAvailable = false;
+    logsDir = '/tmp'; // fallback value that won't be used
+  }
 }
 
 // Pino transport configuration for file rotation
 const transport = pino.transport({
   targets: [
-    // File transport with daily rotation
-    {
+    // File transport with daily rotation (only if logs directory is available)
+    ...(logsDirectoryAvailable ? [{
       target: 'pino/file',
       options: {
         destination: path.join(logsDir, `app-${new Date().toISOString().split('T')[0]}.log`),
         mkdir: true
       },
       level: 'info'
-    },
+    }] : []),
     // Console transport for development (only in non-production)
     ...(process.env.NODE_ENV !== 'production' ? [{
       target: 'pino-pretty',
@@ -134,6 +161,14 @@ const transport = pino.transport({
         ignore: 'pid,hostname'
       },
       level: 'debug'
+    }] : []),
+    // Always include a basic console transport as fallback
+    ...(!logsDirectoryAvailable || process.env.NODE_ENV === 'production' ? [{
+      target: 'pino/file',
+      options: {
+        destination: 1 // stdout
+      },
+      level: 'info'
     }] : [])
   ]
 });

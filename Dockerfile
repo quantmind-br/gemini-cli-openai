@@ -31,8 +31,8 @@ RUN adduser -S nodejs -u 1001
 # Install curl for health checks (required by Coolify)
 RUN apk add --no-cache curl
 
-# Create data directory with proper permissions
-RUN mkdir -p data && chown -R nodejs:nodejs data && chmod -R 755 data
+# Create data and logs directories with proper permissions
+RUN mkdir -p data logs && chown -R nodejs:nodejs data logs && chmod -R 755 data logs
 
 # Add health check for container monitoring
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
@@ -42,10 +42,10 @@ EXPOSE 3000
 
 # Create startup script to handle permissions and debugging in production
 RUN echo '#!/bin/sh' > /app/start.sh && \
-    echo 'echo "🔧 Setting up data directory permissions..."' >> /app/start.sh && \
-    echo 'mkdir -p /app/data 2>/dev/null || true' >> /app/start.sh && \
-    echo 'chown -R nodejs:nodejs /app/data 2>/dev/null || true' >> /app/start.sh && \
-    echo 'chmod -R 755 /app/data 2>/dev/null || true' >> /app/start.sh && \
+    echo 'echo "🔧 Setting up directory permissions..."' >> /app/start.sh && \
+    echo 'mkdir -p /app/data /app/logs 2>/dev/null || true' >> /app/start.sh && \
+    echo 'chown -R nodejs:nodejs /app/data /app/logs 2>/dev/null || true' >> /app/start.sh && \
+    echo 'chmod -R 755 /app/data /app/logs 2>/dev/null || true' >> /app/start.sh && \
     echo 'echo "📁 Data directory status:"' >> /app/start.sh && \
     echo 'ls -la /app/data/ 2>/dev/null || echo "  Data directory is empty or does not exist"' >> /app/start.sh && \
     echo 'if [ -f /app/data/.env ]; then' >> /app/start.sh && \
