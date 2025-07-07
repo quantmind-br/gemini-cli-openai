@@ -122,6 +122,10 @@ app.route("/dashboard", DashboardRoute);
 app.route("/api/config", ConfigApiRoute);
 app.route("/api/auth", AuthRoute);
 
+// Logs API routes
+import { LogsRoute } from "./routes/logs";
+app.route("/api/logs", LogsRoute);
+
 // Root endpoint - basic info about the service
 app.get("/", (c) => {
 	const requiresAuth = !!process.env.OPENAI_API_KEY;
