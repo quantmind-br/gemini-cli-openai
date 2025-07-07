@@ -126,6 +126,14 @@ export class ConfigManager {
 			}
 		}
 
+		// Validate dashboard credentials
+		if (config.DASHBOARD_USERNAME && !config.DASHBOARD_PASSWORD) {
+			errors.push('DASHBOARD_PASSWORD is required when DASHBOARD_USERNAME is set');
+		}
+		if (config.DASHBOARD_PASSWORD && !config.DASHBOARD_USERNAME) {
+			errors.push('DASHBOARD_USERNAME is required when DASHBOARD_PASSWORD is set');
+		}
+
 		return {
 			isValid: errors.length === 0,
 			errors
@@ -184,6 +192,22 @@ export class ConfigManager {
 				required: false,
 				description: 'Stream thinking as content with <thinking> tags (DeepSeek R1 style)',
 				placeholder: 'true'
+			},
+			{
+				key: 'DASHBOARD_USERNAME',
+				label: 'Dashboard Username',
+				type: 'text',
+				required: false,
+				description: 'Username for dashboard authentication',
+				placeholder: 'admin'
+			},
+			{
+				key: 'DASHBOARD_PASSWORD',
+				label: 'Dashboard Password',
+				type: 'password',
+				required: false,
+				description: 'Password for dashboard authentication',
+				placeholder: 'your-secure-password'
 			}
 		];
 	}
@@ -269,6 +293,17 @@ export class ConfigManager {
 		if (config.STREAM_THINKING_AS_CONTENT) {
 			content += '# Optional: Stream thinking as content with <thinking> tags\n';
 			content += `STREAM_THINKING_AS_CONTENT=${config.STREAM_THINKING_AS_CONTENT}\n\n`;
+		}
+
+		// Dashboard credentials
+		if (config.DASHBOARD_USERNAME) {
+			content += '# Dashboard Authentication (required for web dashboard access)\n';
+			content += '# Set these credentials to enable the configuration dashboard at /dashboard\n';
+			content += `DASHBOARD_USERNAME=${config.DASHBOARD_USERNAME}\n`;
+			if (config.DASHBOARD_PASSWORD) {
+				content += `DASHBOARD_PASSWORD=${config.DASHBOARD_PASSWORD}\n`;
+			}
+			content += '\n';
 		}
 
 		return content;

@@ -107,6 +107,8 @@ export interface DashboardConfig {
 	ENABLE_FAKE_THINKING?: string;
 	ENABLE_REAL_THINKING?: string;
 	STREAM_THINKING_AS_CONTENT?: string;
+	DASHBOARD_USERNAME?: string;
+	DASHBOARD_PASSWORD?: string;
 }
 
 export interface ConfigField {
