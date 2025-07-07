@@ -73,6 +73,19 @@ app.post('/', async (c) => {
 		// Write the updated configuration
 		configManager.writeConfig(mergedConfig);
 
+		// Update process.env to make changes available immediately without restart
+		// This ensures that middlewares and other parts of the application can access the new values
+		for (const [key, value] of Object.entries(mergedConfig)) {
+			if (value !== undefined && value !== '') {
+				process.env[key] = value;
+			} else if (value === '') {
+				// Remove from process.env if explicitly cleared
+				delete process.env[key];
+			}
+		}
+
+		console.log('🔄 Configuration updated and applied to runtime environment');
+
 		return c.json({ 
 			success: true, 
 			message: 'Configuration updated successfully' 
@@ -123,6 +136,10 @@ app.post('/upload', async (c) => {
 		currentConfig.GCP_SERVICE_ACCOUNT = fileContent;
 		
 		configManager.writeConfig(currentConfig);
+
+		// Update process.env immediately
+		process.env.GCP_SERVICE_ACCOUNT = fileContent;
+		console.log('🔄 GCP credentials updated and applied to runtime environment');
 
 		return c.json({ 
 			success: true, 

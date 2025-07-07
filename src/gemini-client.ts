@@ -11,6 +11,7 @@ import {
 } from "./constants";
 import { geminiCliModels } from "./models";
 import { validateImageUrl } from "./utils/image-utils";
+import { ConfigManager } from "./utils/config-manager";
 
 // Gemini API response types
 interface GeminiCandidate {
@@ -72,23 +73,46 @@ export class GeminiApiClient {
 	private env: Env;
 	private authManager: AuthManager;
 	private projectId: string | null = null;
+	private configManager: ConfigManager;
 
 	constructor(env: Env, authManager: AuthManager) {
 		this.env = env;
 		this.authManager = authManager;
+		this.configManager = new ConfigManager();
 	}
 
 	/**
-	 * Discovers the Google Cloud project ID. Uses the environment variable if provided.
+	 * Discovers the Google Cloud project ID. Uses dashboard configuration, environment variable, or auto-discovery.
 	 */
 	public async discoverProjectId(): Promise<string> {
-		if (this.env.GEMINI_PROJECT_ID) {
-			return this.env.GEMINI_PROJECT_ID;
+		// Check dashboard configuration first
+		let projectId = null;
+		try {
+			const dashboardConfig = this.configManager.readConfig();
+			if (dashboardConfig.GEMINI_PROJECT_ID) {
+				projectId = dashboardConfig.GEMINI_PROJECT_ID;
+				console.log('Using GEMINI_PROJECT_ID from dashboard configuration:', projectId);
+				return projectId;
+			}
+		} catch (error) {
+			console.warn('Failed to read dashboard configuration for project ID:', error);
 		}
+
+		// Fallback to environment variable
+		if (this.env.GEMINI_PROJECT_ID || process.env.GEMINI_PROJECT_ID) {
+			projectId = this.env.GEMINI_PROJECT_ID || process.env.GEMINI_PROJECT_ID;
+			console.log('Using GEMINI_PROJECT_ID from environment:', projectId);
+			return projectId!;
+		}
+
+		// Use cached project ID if available
 		if (this.projectId) {
+			console.log('Using cached project ID:', this.projectId);
 			return this.projectId;
 		}
 
+		// Auto-discovery as last resort
+		console.log('Attempting auto-discovery of project ID...');
 		try {
 			const initialProjectId = "default-project";
 			const loadResponse = (await this.authManager.callEndpoint("loadCodeAssist", {
@@ -98,14 +122,15 @@ export class GeminiApiClient {
 
 			if (loadResponse.cloudaicompanionProject) {
 				this.projectId = loadResponse.cloudaicompanionProject;
+				console.log('Auto-discovered project ID:', this.projectId);
 				return loadResponse.cloudaicompanionProject;
 			}
-			throw new Error("Project ID discovery failed. Please set the GEMINI_PROJECT_ID environment variable.");
+			throw new Error("Project ID auto-discovery failed. Please set GEMINI_PROJECT_ID in dashboard or environment variables.");
 		} catch (error: unknown) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.error("Failed to discover project ID:", errorMessage);
 			throw new Error(
-				"Could not discover project ID. Make sure you're authenticated and consider setting GEMINI_PROJECT_ID."
+				"Could not discover project ID. Please configure GEMINI_PROJECT_ID through the dashboard at /dashboard or set it as an environment variable."
 			);
 		}
 	}

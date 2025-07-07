@@ -9,6 +9,7 @@ import {
 	TOKEN_BUFFER_TIME,
 	KV_TOKEN_KEY
 } from "./config";
+import { ConfigManager } from "./utils/config-manager";
 
 // Auth-related interfaces
 interface TokenRefreshResponse {
@@ -40,9 +41,11 @@ export class AuthManager {
 	private env: Env;
 	private accessToken: string | null = null;
 	private redisClient: RedisClientType | null = null;
+	private configManager: ConfigManager;
 
 	constructor(env: Env) {
 		this.env = env;
+		this.configManager = new ConfigManager();
 	}
 
 	/**
@@ -59,11 +62,31 @@ export class AuthManager {
 
 	/**
 	 * Initializes authentication using OAuth2 credentials with Redis caching.
+	 * Supports dashboard configuration, environment variables, and fallbacks.
 	 */
 	public async initializeAuth(): Promise<void> {
-		const credentials = this.env.GCP_SERVICE_ACCOUNT || process.env.GCP_SERVICE_ACCOUNT;
+		// Get credentials from dashboard configuration first, then environment
+		let credentials = null;
+		try {
+			const dashboardConfig = this.configManager.readConfig();
+			if (dashboardConfig.GCP_SERVICE_ACCOUNT) {
+				credentials = dashboardConfig.GCP_SERVICE_ACCOUNT;
+				console.log('Using GCP_SERVICE_ACCOUNT from dashboard configuration');
+			}
+		} catch (error) {
+			console.warn('Failed to read dashboard configuration for GCP credentials:', error);
+		}
+
+		// Fallback to environment variables
 		if (!credentials) {
-			throw new Error("`GCP_SERVICE_ACCOUNT` environment variable not set. Please provide OAuth2 credentials JSON.");
+			credentials = this.env.GCP_SERVICE_ACCOUNT || process.env.GCP_SERVICE_ACCOUNT;
+			if (credentials) {
+				console.log('Using GCP_SERVICE_ACCOUNT from environment variables');
+			}
+		}
+
+		if (!credentials) {
+			throw new Error("GCP_SERVICE_ACCOUNT not configured. Please upload OAuth2 credentials through the dashboard at /dashboard or set the environment variable.");
 		}
 
 		try {

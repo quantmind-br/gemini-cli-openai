@@ -192,22 +192,6 @@ export class ConfigManager {
 				required: false,
 				description: 'Stream thinking as content with <thinking> tags (DeepSeek R1 style)',
 				placeholder: 'true'
-			},
-			{
-				key: 'DASHBOARD_USERNAME',
-				label: 'Dashboard Username',
-				type: 'text',
-				required: false,
-				description: 'Username for dashboard authentication',
-				placeholder: 'admin'
-			},
-			{
-				key: 'DASHBOARD_PASSWORD',
-				label: 'Dashboard Password',
-				type: 'password',
-				required: false,
-				description: 'Password for dashboard authentication',
-				placeholder: 'your-secure-password'
 			}
 		];
 	}

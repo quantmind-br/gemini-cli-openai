@@ -1,8 +1,13 @@
 import { MiddlewareHandler } from "hono";
+import { ConfigManager } from "../utils/config-manager";
+
+// Create singleton instance for configuration access
+const configManager = new ConfigManager();
 
 /**
- * Middleware to enforce OpenAI-style API key authentication if OPENAI_API_KEY is set in the environment.
+ * Middleware to enforce OpenAI-style API key authentication if OPENAI_API_KEY is configured.
  * Checks for 'Authorization: Bearer <key>' header on protected routes.
+ * Supports both environment variables and dashboard configuration.
  */
 export const openAIApiKeyAuth: MiddlewareHandler = async (c, next) => {
 	// Skip authentication for public endpoints
@@ -12,8 +17,17 @@ export const openAIApiKeyAuth: MiddlewareHandler = async (c, next) => {
 		return;
 	}
 
-	// If OPENAI_API_KEY is set in environment, require authentication
-	const apiKey = process.env.OPENAI_API_KEY;
+	// Get API key from dashboard configuration first, fallback to environment
+	let apiKey = process.env.OPENAI_API_KEY;
+	try {
+		const dashboardConfig = configManager.readConfig();
+		if (dashboardConfig.OPENAI_API_KEY) {
+			apiKey = dashboardConfig.OPENAI_API_KEY;
+		}
+	} catch (error) {
+		// Fallback to environment variable if dashboard config fails
+		console.warn('Failed to read dashboard configuration for API key, using environment variable:', error);
+	}
 	if (apiKey) {
 		const authHeader = c.req.header("Authorization");
 
