@@ -28,8 +28,15 @@ COPY --from=builder /app/public ./public
 RUN addgroup -g 1001 -S nodejs
 RUN adduser -S nodejs -u 1001
 
+# Install curl for health checks (required by Coolify)
+RUN apk add --no-cache curl
+
 # Create data directory with proper permissions
 RUN mkdir -p data && chown -R nodejs:nodejs data && chmod -R 755 data
+
+# Add health check for container monitoring
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
 
 EXPOSE 3000
 

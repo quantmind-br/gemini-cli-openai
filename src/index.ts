@@ -10,6 +10,7 @@ import { ConfigApiRoute } from "./routes/config-api";
 import { AuthRoute } from "./routes/auth";
 import { openAIApiKeyAuth } from "./middlewares/auth";
 import { loggingMiddleware } from "./middlewares/logging";
+import { Env } from "./types";
 
 // Load configuration from data/.env if it exists (dashboard configuration)
 const dataEnvPath = path.resolve('./data/.env');
@@ -147,9 +148,51 @@ app.get("/", (c) => {
 	});
 });
 
-// Health check endpoint
-app.get("/health", (c) => {
-	return c.json({ status: "ok", timestamp: new Date().toISOString() });
+// Enhanced health check endpoint with dependency validation
+app.get("/health", async (c) => {
+	const healthStatus = {
+		status: "ok",
+		timestamp: new Date().toISOString(),
+		services: {
+			app: "healthy",
+			redis: "unknown",
+			auth: "unknown"
+		},
+		version: "1.0.0"
+	};
+
+	try {
+		// Check Redis connection by importing required modules
+		const { AuthManager } = await import("./auth");
+		
+		const env = process.env as unknown as Env;
+		const authManager = new AuthManager(env);
+		
+		// Test Redis connectivity via token cache info
+		const cacheInfo = await authManager.getCachedTokenInfo();
+		healthStatus.services.redis = cacheInfo.cached !== undefined ? "healthy" : "degraded";
+		
+		// Check auth configuration
+		if (process.env.GCP_SERVICE_ACCOUNT) {
+			healthStatus.services.auth = "configured";
+		} else {
+			healthStatus.services.auth = "not_configured";
+			healthStatus.status = "degraded";
+		}
+
+		// Return appropriate HTTP status based on overall health
+		const httpStatus = healthStatus.status === "ok" ? 200 : 503;
+		return c.json(healthStatus, httpStatus);
+		
+	} catch (error) {
+		// If any critical dependency fails, mark as unhealthy
+		healthStatus.status = "unhealthy";
+		healthStatus.services.redis = "unhealthy";
+		healthStatus.services.auth = "unknown";
+		
+		console.error("Health check failed:", error);
+		return c.json(healthStatus, 503);
+	}
 });
 
 // Start the server
